@@ -1,6 +1,6 @@
 {
   "name": "game-reviews-forum",
-  "homepage": "https://nguyen-tran-qk.github.io/game-reviews-forum",
+  "homepage": "https://game-reviews-forums.vercel.app/",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
