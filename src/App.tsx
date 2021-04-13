@@ -2,8 +2,9 @@ import React from "react";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import Login from "./auth/Login";
 import Signup from "./auth/Signup";
-import "bootstrap/dist/css/bootstrap.min.css";
 import HomeFeed from "./HomeFeed";
+import "bootstrap/dist/css/bootstrap.min.css";
+import "./font_awesome/css/all.css";
 
 function App() {
     return (
