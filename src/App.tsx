@@ -1,21 +1,41 @@
 import React from "react";
-import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route, Redirect, RouteProps } from "react-router-dom";
 import Login from "./auth/Login";
 import Signup from "./auth/Signup";
 import HomeFeed from "./HomeFeed";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./font_awesome/css/all.css";
+import { isLoggedIn } from "./utils/helpers";
+
+// A wrapper for <Route> that redirects to home page if not authenticated
+const UnAuthRoute = ({ children, ...rest }: RouteProps) => (
+    <Route
+        {...rest}
+        render={({ location }) =>
+            isLoggedIn() ? (
+                <Redirect
+                    to={{
+                        pathname: "/",
+                        state: { from: location },
+                    }}
+                />
+            ) : (
+                children
+            )
+        }
+    />
+);
 
 function App() {
     return (
         <Router>
             <Switch>
-                <Route path="/login">
+                <UnAuthRoute path="/login">
                     <Login />
-                </Route>
-                <Route path="/signup">
+                </UnAuthRoute>
+                <UnAuthRoute path="/signup">
                     <Signup />
-                </Route>
+                </UnAuthRoute>
                 <Route path="/">
                     <HomeFeed />
                 </Route>
