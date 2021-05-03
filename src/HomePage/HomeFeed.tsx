@@ -1,44 +1,15 @@
 import React, { useState } from "react";
-import { Button, Card, Col, Container, Row, Modal, Form } from "react-bootstrap";
-import ReactStars from "react-rating-stars-component";
-import { gql, useMutation } from "@apollo/client";
-
-const MUTATION_ADD_GAME = () => gql`
-    mutation AddGame(
-        $title: String!
-        $description: String
-        $images: [String] = []
-        $genres: [Genre]
-        $price: Float
-        $studio: String
-        $publishedDate: String
-    ) {
-        addGame(
-            title: $title
-            description: $description
-            images: $images
-            genres: $genres
-            price: $price
-            studio: $studio
-            publishedDate: $publishedDate
-        ) {
-            id
-            title
-        }
-    }
-`;
+import { Button, Card, Col, Container, Row } from "react-bootstrap";
+import { useHistory } from "react-router";
+import { isLoggedIn } from "../utils/helpers";
+import AddReviewDialog from "./AddReviewDialog";
 
 const HomeFeed = () => {
+    const history = useHistory();
     const [show, setShow] = useState(false);
-    const [gameTitle, setGameTitle] = useState("");
-    const [addGame, { data, error }] = useMutation(MUTATION_ADD_GAME());
 
     const handleClose = () => setShow(false);
     const handleShow = () => setShow(true);
-
-    const onAddGame = () => {
-        addGame({ variables: { title: gameTitle } });
-    };
 
     return (
         <>
@@ -50,9 +21,15 @@ const HomeFeed = () => {
                                 <h1>Game reviews forum</h1>
                             </Col>
                             <Col md={4} className="align-middle">
-                                <Button variant="primary" onClick={handleShow}>
-                                    Add review
-                                </Button>
+                                {isLoggedIn() ? (
+                                    <Button variant="primary" onClick={handleShow}>
+                                        Add review
+                                    </Button>
+                                ) : (
+                                    <Button variant="primary" onClick={() => history.push("/login")}>
+                                        Login
+                                    </Button>
+                                )}
                             </Col>
                         </Row>
                         <Card body className="mb-3">
@@ -67,44 +44,7 @@ const HomeFeed = () => {
                     </Col>
                 </Row>
             </Container>
-            <Modal show={show} onHide={handleClose}>
-                <Modal.Header closeButton>
-                    <Modal.Title>Add your review about a game</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
-                    <Form>
-                        <Form.Group controlId="addGameTitle">
-                            <Form.Label>Title of the game</Form.Label>
-                            <Form.Control
-                                type="text"
-                                placeholder="Let everyone know what game you're reviewing"
-                                value={gameTitle}
-                                onChange={(e) => setGameTitle(e.target.value)}
-                            />
-                        </Form.Group>
-                        <Form.Group controlId="addGameDesc">
-                            <Form.Label>Your review</Form.Label>
-                            <Form.Control as="textarea" placeholder="What do you think about the game?" />
-                        </Form.Group>
-                        <Form.Group controlId="addGameRating">
-                            <Form.Label>Rate the game</Form.Label>
-                            <ReactStars
-                                count={5}
-                                isHalf
-                                size={24}
-                                emptyIcon={<i className="far fa-star"></i>}
-                                halfIcon={<i className="fa fa-star-half-alt"></i>}
-                                filledIcon={<i className="fa fa-star"></i>}
-                            />
-                        </Form.Group>
-                    </Form>
-                </Modal.Body>
-                <Modal.Footer>
-                    <Button variant="primary" onClick={onAddGame}>
-                        Share your review
-                    </Button>
-                </Modal.Footer>
-            </Modal>
+            <AddReviewDialog show={show} onHide={handleClose} />
         </>
     );
 };
