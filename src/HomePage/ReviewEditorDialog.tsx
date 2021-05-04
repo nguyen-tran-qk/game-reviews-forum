@@ -4,29 +4,20 @@ import Autosuggest from "react-autosuggest";
 import { Button, Modal, Form } from "react-bootstrap";
 import ReactStars from "react-rating-stars-component";
 import { Game } from "../utils/types";
-import './autosuggest.css';
+import "./autosuggest.css";
 
-const MUTATION_ADD_GAME = () => gql`
-    mutation AddGame(
-        $title: String!
-        $description: String
-        $images: [String] = []
-        $genres: [Genre]
-        $price: Float
-        $studio: String
-        $publishedDate: String
-    ) {
-        addGame(
-            title: $title
-            description: $description
-            images: $images
-            genres: $genres
-            price: $price
-            studio: $studio
-            publishedDate: $publishedDate
-        ) {
+const MUTATION_ADD_REVIEW = () => gql`
+    mutation AddReview($gameId: ID!, $reviewText: String!, $rating: Float!) {
+        addReviewToGame(gameId: $gameId, reviewText: $reviewText, rating: $rating) {
             id
-            title
+        }
+    }
+`;
+
+const MUTATION_ADD_REVIEW_TO_NEW_GAME = () => gql`
+    mutation AddReviewToNewGame($gameTitle: String!, $reviewText: String!, $rating: Float!) {
+        addReviewToNewGame(gameTitle: $gameTitle, reviewText: $reviewText, rating: $rating) {
+            id
         }
     }
 `;
@@ -40,50 +31,74 @@ const QUERY_FIND_GAMES_BY_TITLE = () => gql`
     }
 `;
 
-interface AddReviewDialogProps {
+interface ReviewEditorDialogProps {
     show: boolean;
     onHide: () => void;
 }
 
-const AddReviewDialog = (props: AddReviewDialogProps) => {
+const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
     const { show, onHide } = props;
     const [selectedGame, setSelectedGame] = useState<Game>();
     // list of all games
     const [gamesSuggestions, setGamesSuggestions] = useState<Game[]>([]);
     // keyword to search for game by title
     const [searchKeyword, setSearchKeyword] = useState("");
-    const [addGame, addGameResult] = useMutation(MUTATION_ADD_GAME());
+    const [addReview, addReviewResult] = useMutation(MUTATION_ADD_REVIEW());
+    const [addReviewToNewGame, addReviewToNewGameResult] = useMutation(MUTATION_ADD_REVIEW_TO_NEW_GAME());
     const [findGame, findGameResult] = useLazyQuery(QUERY_FIND_GAMES_BY_TITLE());
+    const [reviewText, setReviewText] = useState("");
+    const [rating, setRating] = useState(0);
 
-    const onAddGame = () => {
-        addGame({ variables: { title: selectedGame?.title } });
+    const onAddReview = () => {
+        if (selectedGame) {
+            if (selectedGame.id === "new_game") {
+                addReviewToNewGame({ variables: { gameTitle: selectedGame.title, reviewText, rating }, refetchQueries: ["getAllReviews"] });
+            } else {
+                addReview({ variables: { gameId: selectedGame.id, reviewText, rating }, refetchQueries: ["GetAllReviews"] });
+            }
+        }
     };
 
-    const getSuggestionValue = (suggestion: Game) => suggestion.title;
+    const getSuggestionValue = (suggestion: Game) => (suggestion.id === "new_game" ? searchKeyword : suggestion.title);
 
-    const renderSuggestion = (suggestion: Game) => <div>{suggestion.title}</div>;
+    const renderSuggestion = (suggestion: Game) => (
+        <div>{suggestion.id === "new_game" ? `Add "${suggestion.title}" as a new game` : suggestion.title}</div>
+    );
 
     const inputProps = {
-        placeholder: "Let everyone know what game you're reviewing",
+        placeholder: "Type to search for game",
         value: searchKeyword,
         onChange: (e: FormEvent<HTMLElement>, options: { newValue: string }) => setSearchKeyword(options.newValue),
     };
 
     const onSuggestionsFetchRequested = () => {
         if (searchKeyword) {
-            findGame({ variables: { title: searchKeyword } })
+            findGame({ variables: { title: searchKeyword } });
         }
     };
 
-    const onSuggestionSelected = (e: any, options: {suggestion: Game}) => {
+    const onSuggestionSelected = (e: any, options: { suggestion: Game }) => {
         setSelectedGame(options.suggestion);
     };
 
     useEffect(() => {
+        const newGameSuggestion: Game = {
+            id: "new_game",
+            title: searchKeyword,
+        };
+        const gameSuggestions = [newGameSuggestion];
         if (findGameResult.data?.findGameByTitle) {
-            setGamesSuggestions(findGameResult.data.findGameByTitle);
+            gameSuggestions.unshift(findGameResult.data.findGameByTitle);
         }
-    }, [findGameResult.data]);
+        setGamesSuggestions(gameSuggestions.flat());
+    }, [findGameResult.data, searchKeyword]);
+
+    useEffect(() => {
+        const result = addReviewResult.data?.addReviewToGame || addReviewToNewGameResult.data?.addReviewToNewGame;
+        if (result) {
+            onHide();
+        }
+    }, [addReviewResult.data, addReviewToNewGameResult.data, onHide]);
 
     return (
         <Modal show={show} onHide={onHide}>
@@ -93,7 +108,7 @@ const AddReviewDialog = (props: AddReviewDialogProps) => {
             <Modal.Body>
                 <Form>
                     <Form.Group controlId="addGameTitle">
-                        <Form.Label>Title of the game</Form.Label>
+                        <Form.Label>Let everyone know what game you're reviewing</Form.Label>
                         <Autosuggest
                             suggestions={gamesSuggestions}
                             onSuggestionsFetchRequested={onSuggestionsFetchRequested}
@@ -103,16 +118,15 @@ const AddReviewDialog = (props: AddReviewDialogProps) => {
                             inputProps={inputProps}
                             onSuggestionSelected={onSuggestionSelected}
                         />
-                        {/* <Form.Control
-                            type="text"
-                            placeholder="Let everyone know what game you're reviewing"
-                            value={gameTitle}
-                            onChange={(e) => setGameTitle(e.target.value)}
-                        /> */}
                     </Form.Group>
                     <Form.Group controlId="addGameDesc">
                         <Form.Label>Your review</Form.Label>
-                        <Form.Control as="textarea" placeholder="What do you think about the game?" />
+                        <Form.Control
+                            as="textarea"
+                            placeholder="What do you think about the game?"
+                            value={reviewText}
+                            onChange={(e) => setReviewText(e.target.value)}
+                        />
                     </Form.Group>
                     <Form.Group controlId="addGameRating">
                         <Form.Label>Rate the game</Form.Label>
@@ -123,12 +137,14 @@ const AddReviewDialog = (props: AddReviewDialogProps) => {
                             emptyIcon={<i className="far fa-star"></i>}
                             halfIcon={<i className="fa fa-star-half-alt"></i>}
                             filledIcon={<i className="fa fa-star"></i>}
+                            value={rating}
+                            onChange={(newRating: number) => setRating(newRating)}
                         />
                     </Form.Group>
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" onClick={onAddGame}>
+                <Button variant="primary" onClick={onAddReview} disabled={!selectedGame}>
                     Share your review
                 </Button>
             </Modal.Footer>
@@ -136,4 +152,4 @@ const AddReviewDialog = (props: AddReviewDialogProps) => {
     );
 };
 
-export default AddReviewDialog;
+export default ReviewEditorDialog;

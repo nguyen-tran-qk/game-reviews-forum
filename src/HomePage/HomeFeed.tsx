@@ -1,50 +1,96 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Container, Row } from "react-bootstrap";
-import { useHistory } from "react-router";
-import { isLoggedIn } from "../utils/helpers";
-import AddReviewDialog from "./AddReviewDialog";
+import ReactStars from "react-rating-stars-component";
+import { gql, useLazyQuery } from "@apollo/client";
+import { Review } from "../utils/types";
+import "./home-feed.scss";
+
+export const QUERY_GET_ALL_REVIEWS = () => gql`
+    query GetAllReviews {
+        getAllReviews {
+            id
+            username
+            gameId {
+                id
+                title
+                description
+                genres
+                price
+                studio
+                publishedDate
+            }
+            reviewText
+            rating
+            images
+            comments {
+                username
+                commentText
+                createdAt
+            }
+            createdAt
+        }
+    }
+`;
 
 const HomeFeed = () => {
-    const history = useHistory();
-    const [show, setShow] = useState(false);
+    const [reviewsList, setReviewsList] = useState<Review[]>([]);
+    const [getAllReviews, getAllReviewsResult] = useLazyQuery(QUERY_GET_ALL_REVIEWS());
 
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    useEffect(() => {
+        // fetch all reviews for home feed
+        getAllReviews();
+    }, [getAllReviews]);
+
+    useEffect(() => {
+        if (getAllReviewsResult.data) {
+            setReviewsList(getAllReviewsResult.data.getAllReviews);
+        }
+    }, [getAllReviewsResult.data]);
 
     return (
         <>
-            <Container fluid>
-                <Row className="justify-content-md-center">
+            <Container fluid className="home-feed py-3">
+                <Row className="justify-content-center">
                     <Col xl={6} xs={10}>
-                        <Row>
-                            <Col md={8} className="align-middle">
-                                <h1>Game reviews forum</h1>
-                            </Col>
-                            <Col md={4} className="align-middle">
-                                {isLoggedIn() ? (
-                                    <Button variant="primary" onClick={handleShow}>
-                                        Add review
-                                    </Button>
-                                ) : (
-                                    <Button variant="primary" onClick={() => history.push("/login")}>
-                                        Login
-                                    </Button>
-                                )}
-                            </Col>
-                        </Row>
-                        <Card body className="mb-3">
-                            <Card.Title>Spider man: Miles Morales - Amazing but short fuse</Card.Title>
-                            <span>by Mr.Anon</span>
-                            <Card.Text>
-                                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque laoreet nulla ut neque vehicula, vel
-                                luctus eros sollicitudin. Pellentesque non velit venenatis, lacinia nisl in, feugiat massa.
-                            </Card.Text>
-                            <Button variant="primary">View more</Button>
-                        </Card>
+                        <div className="reviews-list">
+                            {reviewsList.map((review) => {
+                                return (
+                                    <Card body className="mb-3" key={review.id}>
+                                        <Card.Title className="review-card-header">
+                                            <span>{review.gameId.title}</span>
+                                            <Button variant="light">
+                                                <i className="material-icons">edit</i>
+                                            </Button>
+                                        </Card.Title>
+                                        <ReactStars
+                                            count={5}
+                                            isHalf
+                                            size={24}
+                                            emptyIcon={<i className="far fa-star"></i>}
+                                            halfIcon={<i className="fa fa-star-half-alt"></i>}
+                                            filledIcon={<i className="fa fa-star"></i>}
+                                            value={review.rating}
+                                            edit={false}
+                                        />
+                                        <span>
+                                            - by <b>{review.username}</b>
+                                        </span>
+                                        <Card.Text>{review.reviewText}</Card.Text>
+                                        <Row>
+                                            <Col md={6}>
+                                                <Button variant="link">{review.comments?.length || "0"} comments</Button>
+                                            </Col>
+                                            <Col md={6} className="text-right">
+                                                <Button variant="primary">More details</Button>
+                                            </Col>
+                                        </Row>
+                                    </Card>
+                                );
+                            })}
+                        </div>
                     </Col>
                 </Row>
             </Container>
-            <AddReviewDialog show={show} onHide={handleClose} />
         </>
     );
 };

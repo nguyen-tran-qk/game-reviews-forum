@@ -41,7 +41,7 @@ const Signup = () => {
             <Row className="justify-content-md-center">
                 <Col md={6} className="p-3">
                     <Card body>
-                        <Card.Title>Join our community with millions of game reviews</Card.Title>
+                        <Card.Title>Join our community</Card.Title>
                         <Form>
                             <Form.Group controlId="signupUsername">
                                 <Form.Label>Username</Form.Label>
@@ -63,6 +63,9 @@ const Signup = () => {
                             </Form.Group>
                             <Button variant="primary" onClick={onSignup}>
                                 Sign me up
+                            </Button>
+                            <Button variant="light" onClick={() => history.push("/login")} className="mx-3">
+                                Go to Login
                             </Button>
                         </Form>
                     </Card>
