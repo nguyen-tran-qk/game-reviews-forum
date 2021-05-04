@@ -37,7 +37,7 @@ function App() {
 
     return (
         <>
-            <Navbar bg="light" variant="light">
+            <Navbar bg="light" variant="light" className="justify-content-between">
                 <Navbar.Brand href="/">Game reviews forum</Navbar.Brand>
                 <Form inline>
                     {isLoggedIn() ? (

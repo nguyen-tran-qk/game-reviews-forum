@@ -4,6 +4,7 @@ import ReactStars from "react-rating-stars-component";
 import { gql, useLazyQuery } from "@apollo/client";
 import { Review } from "../utils/types";
 import "./home-feed.scss";
+import ReviewEditorDialog from "./ReviewEditorDialog";
 
 export const QUERY_GET_ALL_REVIEWS = () => gql`
     query GetAllReviews {
@@ -35,6 +36,10 @@ export const QUERY_GET_ALL_REVIEWS = () => gql`
 const HomeFeed = () => {
     const [reviewsList, setReviewsList] = useState<Review[]>([]);
     const [getAllReviews, getAllReviewsResult] = useLazyQuery(QUERY_GET_ALL_REVIEWS());
+    const [editingReview, setEditingReview] = useState<Review>();
+
+    const handleClose = () => setEditingReview(undefined);
+    const handleShow = (review: Review) => () => setEditingReview(review);
 
     useEffect(() => {
         // fetch all reviews for home feed
@@ -58,7 +63,7 @@ const HomeFeed = () => {
                                     <Card body className="mb-3" key={review.id}>
                                         <Card.Title className="review-card-header">
                                             <span>{review.gameId.title}</span>
-                                            <Button variant="light">
+                                            <Button variant="light" onClick={handleShow(review)}>
                                                 <i className="material-icons">edit</i>
                                             </Button>
                                         </Card.Title>
@@ -91,6 +96,7 @@ const HomeFeed = () => {
                     </Col>
                 </Row>
             </Container>
+            <ReviewEditorDialog show={!!editingReview} onHide={handleClose} editingReview={editingReview} />
         </>
     );
 };

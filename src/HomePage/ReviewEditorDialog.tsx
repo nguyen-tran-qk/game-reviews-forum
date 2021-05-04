@@ -3,7 +3,7 @@ import React, { FormEvent, useEffect, useState } from "react";
 import Autosuggest from "react-autosuggest";
 import { Button, Modal, Form } from "react-bootstrap";
 import ReactStars from "react-rating-stars-component";
-import { Game } from "../utils/types";
+import { Game, Review } from "../utils/types";
 import "./autosuggest.css";
 
 const MUTATION_ADD_REVIEW = () => gql`
@@ -34,6 +34,7 @@ const QUERY_FIND_GAMES_BY_TITLE = () => gql`
 interface ReviewEditorDialogProps {
     show: boolean;
     onHide: () => void;
+    editingReview?: Review;
 }
 
 const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
