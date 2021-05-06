@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { BrowserRouter as Router, Switch, Route, Redirect, RouteProps } from "react-router-dom";
 import Login from "./auth/Login";
 import Signup from "./auth/Signup";
@@ -6,7 +6,7 @@ import HomeFeed from "./HomePage/HomeFeed";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./font_awesome/css/all.css";
 import { isLoggedIn } from "./utils/helpers";
-import ReviewEditorDialog from "./HomePage/ReviewEditorDialog";
+// import ReviewEditorDialog from "./HomePage/ReviewEditorDialog";
 
 // A wrapper for <Route> that redirects to home page if not authenticated
 const UnAuthRoute = ({ children, ...rest }: RouteProps) => (

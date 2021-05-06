@@ -42,7 +42,7 @@ const HomeFeed = () => {
     const handleShow = () => setShow(true);
     const [reviewsList, setReviewsList] = useState<Review[]>([]);
     const [getAllReviews, getAllReviewsResult] = useLazyQuery(QUERY_GET_ALL_REVIEWS());
-    const [editingReview, setEditingReview] = useState<Review>();
+    // const [editingReview, setEditingReview] = useState<Review>();
 
     // const handleClose = () => setEditingReview(undefined);
     // const handleShow = (review: Review) => () => setEditingReview(review);
