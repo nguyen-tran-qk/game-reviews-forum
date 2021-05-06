@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Button, Card, Col, Container, Row, Navbar, Form } from "react-bootstrap";
 import ReactStars from "react-rating-stars-component";
-import { gql, useLazyQuery } from "@apollo/client";
+import { gql, useLazyQuery, useMutation } from "@apollo/client";
 import { Review } from "../utils/types";
 import "./home-feed.scss";
 import ReviewEditorDialog from "./ReviewEditorDialog";
-import { isLoggedIn } from "../utils/helpers";
+import { getCurrentUser, isLoggedIn } from "../utils/helpers";
 import { useHistory } from "react-router";
 
 export const QUERY_GET_ALL_REVIEWS = () => gql`
@@ -35,6 +35,12 @@ export const QUERY_GET_ALL_REVIEWS = () => gql`
     }
 `;
 
+const MUTATION_DELETE_REVIEW = () => gql`
+    mutation DeleteReview($id: ID!) {
+        deleteReview(id: $id)
+    }
+`;
+
 const HomeFeed = () => {
     const history = useHistory();
     const [show, setShow] = useState(false);
@@ -42,6 +48,8 @@ const HomeFeed = () => {
     const handleShow = () => setShow(true);
     const [reviewsList, setReviewsList] = useState<Review[]>([]);
     const [getAllReviews, getAllReviewsResult] = useLazyQuery(QUERY_GET_ALL_REVIEWS());
+    const [deleteReview] = useMutation(MUTATION_DELETE_REVIEW());
+    const user = getCurrentUser();
     // const [editingReview, setEditingReview] = useState<Review>();
 
     // const handleClose = () => setEditingReview(undefined);
@@ -57,6 +65,10 @@ const HomeFeed = () => {
             setReviewsList(getAllReviewsResult.data.getAllReviews);
         }
     }, [getAllReviewsResult.data]);
+
+    const onDeleteReview = (reviewId: string) => () => {
+        deleteReview({ variables: { id: reviewId }, refetchQueries: ["GetAllReviews"] });
+    };
 
     return (
         <>
@@ -86,6 +98,11 @@ const HomeFeed = () => {
                                             {/* <Button variant="light" onClick={handleShow(review)}>
                                                 <i className="material-icons">edit</i>
                                             </Button> */}
+                                            {review.username === user?.username && (
+                                                <Button variant="light" onClick={onDeleteReview(review.id)}>
+                                                    <i className="material-icons">delete</i>
+                                                </Button>
+                                            )}
                                         </Card.Title>
                                         <ReactStars
                                             count={5}
