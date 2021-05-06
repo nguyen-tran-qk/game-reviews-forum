@@ -7,8 +7,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import "./font_awesome/css/all.css";
 import { isLoggedIn } from "./utils/helpers";
 import ReviewEditorDialog from "./HomePage/ReviewEditorDialog";
-import { Navbar, Form, Button } from "react-bootstrap";
-import { useHistory } from "react-router";
 
 // A wrapper for <Route> that redirects to home page if not authenticated
 const UnAuthRoute = ({ children, ...rest }: RouteProps) => (
@@ -30,27 +28,10 @@ const UnAuthRoute = ({ children, ...rest }: RouteProps) => (
 );
 
 function App() {
-    const history = useHistory();
-    const [show, setShow] = useState(false);
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
+    
 
     return (
         <>
-            <Navbar bg="light" variant="light" className="justify-content-between">
-                <Navbar.Brand href="/">Game reviews forum</Navbar.Brand>
-                <Form inline>
-                    {isLoggedIn() ? (
-                        <Button variant="primary" onClick={handleShow}>
-                            Add review
-                        </Button>
-                    ) : (
-                        <Button variant="primary" onClick={() => history.push("/login")}>
-                            Login
-                        </Button>
-                    )}
-                </Form>
-            </Navbar>
             <Router>
                 <Switch>
                     <UnAuthRoute path="/login">
@@ -61,7 +42,6 @@ function App() {
                     </UnAuthRoute>
                     <Route path="/">
                         <HomeFeed />
-                        <ReviewEditorDialog show={show} onHide={handleClose} />
                     </Route>
                 </Switch>
             </Router>
