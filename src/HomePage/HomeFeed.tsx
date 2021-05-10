@@ -44,16 +44,22 @@ const MUTATION_DELETE_REVIEW = () => gql`
 const HomeFeed = () => {
     const history = useHistory();
     const [show, setShow] = useState(false);
-    const handleClose = () => setShow(false);
-    const handleShow = () => setShow(true);
     const [reviewsList, setReviewsList] = useState<Review[]>([]);
     const [getAllReviews, getAllReviewsResult] = useLazyQuery(QUERY_GET_ALL_REVIEWS());
     const [deleteReview] = useMutation(MUTATION_DELETE_REVIEW());
     const user = getCurrentUser();
-    // const [editingReview, setEditingReview] = useState<Review>();
+    const [editingReview, setEditingReview] = useState<Review>();
 
-    // const handleClose = () => setEditingReview(undefined);
-    // const handleShow = (review: Review) => () => setEditingReview(review);
+    const handleClose = () => {
+        setShow(false);
+        setEditingReview(undefined);
+    };
+    const handleShow = (review?: Review) => () => {
+        setShow(true);
+        if (review) {
+            setEditingReview(review);
+        }
+    };
 
     useEffect(() => {
         // fetch all reviews for home feed
@@ -76,7 +82,7 @@ const HomeFeed = () => {
                 <Navbar.Brand href="/">Game reviews forum</Navbar.Brand>
                 <Form inline>
                     {isLoggedIn() ? (
-                        <Button variant="primary" onClick={handleShow}>
+                        <Button variant="primary" onClick={handleShow()}>
                             Add review
                         </Button>
                     ) : (
@@ -95,13 +101,15 @@ const HomeFeed = () => {
                                     <Card body className="mb-3" key={review.id}>
                                         <Card.Title className="review-card-header">
                                             <span>{review.gameId.title}</span>
-                                            {/* <Button variant="light" onClick={handleShow(review)}>
-                                                <i className="material-icons">edit</i>
-                                            </Button> */}
                                             {review.username === user?.username && (
-                                                <Button variant="light" onClick={onDeleteReview(review.id)}>
-                                                    <i className="material-icons">delete</i>
-                                                </Button>
+                                                <>
+                                                    <Button variant="light" onClick={handleShow(review)}>
+                                                        <i className="material-icons">edit</i>
+                                                    </Button>
+                                                    <Button variant="light" onClick={onDeleteReview(review.id)}>
+                                                        <i className="material-icons">delete</i>
+                                                    </Button>
+                                                </>
                                             )}
                                         </Card.Title>
                                         <ReactStars
@@ -133,8 +141,7 @@ const HomeFeed = () => {
                     </Col>
                 </Row>
             </Container>
-            <ReviewEditorDialog show={show} onHide={handleClose} />
-            {/* <ReviewEditorDialog show={!!editingReview} onHide={handleClose} editingReview={editingReview} /> */}
+            {show && <ReviewEditorDialog onHide={handleClose} editingReview={editingReview} />}
         </>
     );
 };

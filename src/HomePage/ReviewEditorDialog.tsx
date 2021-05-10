@@ -31,31 +31,49 @@ const QUERY_FIND_GAMES_BY_TITLE = () => gql`
     }
 `;
 
+const MUTATION_UPDATE_REVIEW = () => gql`
+    mutation UpdateReview($id: ID!, $reviewText: String!, $rating: Float!) {
+        updateReview(id: $id, reviewText: $reviewText, rating: $rating) {
+            id
+        }
+    }
+`;
+
 interface ReviewEditorDialogProps {
-    show: boolean;
     onHide: () => void;
     editingReview?: Review;
 }
 
 const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
-    const { show, onHide } = props;
-    const [selectedGame, setSelectedGame] = useState<Game>();
+    const { onHide, editingReview } = props;
+    const [selectedGame, setSelectedGame] = useState<Game | undefined>(editingReview?.gameId || undefined);
     // list of all games
     const [gamesSuggestions, setGamesSuggestions] = useState<Game[]>([]);
     // keyword to search for game by title
-    const [searchKeyword, setSearchKeyword] = useState("");
+    const [searchKeyword, setSearchKeyword] = useState(editingReview?.gameId.title || "");
     const [addReview, addReviewResult] = useMutation(MUTATION_ADD_REVIEW());
     const [addReviewToNewGame, addReviewToNewGameResult] = useMutation(MUTATION_ADD_REVIEW_TO_NEW_GAME());
+    const [updateReview, updateReviewResult] = useMutation(MUTATION_UPDATE_REVIEW());
     const [findGame, findGameResult] = useLazyQuery(QUERY_FIND_GAMES_BY_TITLE());
-    const [reviewText, setReviewText] = useState("");
-    const [rating, setRating] = useState(0);
+    const [reviewText, setReviewText] = useState(editingReview?.reviewText || "");
+    const [rating, setRating] = useState(editingReview?.rating || 0);
 
-    const onAddReview = () => {
+    const onSubmitReview = () => {
         if (selectedGame) {
-            if (selectedGame.id === "new_game") {
-                addReviewToNewGame({ variables: { gameTitle: selectedGame.title, reviewText, rating }, refetchQueries: ["getAllReviews"] });
+            if (editingReview) {
+                updateReview({
+                    variables: { id: editingReview.id, reviewText, rating },
+                    refetchQueries: ["GetAllReviews"],
+                });
             } else {
-                addReview({ variables: { gameId: selectedGame.id, reviewText, rating }, refetchQueries: ["GetAllReviews"] });
+                if (selectedGame.id === "new_game") {
+                    addReviewToNewGame({
+                        variables: { gameTitle: selectedGame.title, reviewText, rating },
+                        refetchQueries: ["GetAllReviews"],
+                    });
+                } else {
+                    addReview({ variables: { gameId: selectedGame.id, reviewText, rating }, refetchQueries: ["GetAllReviews"] });
+                }
             }
         }
     };
@@ -70,6 +88,7 @@ const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
         placeholder: "Type to search for game",
         value: searchKeyword,
         onChange: (e: FormEvent<HTMLElement>, options: { newValue: string }) => setSearchKeyword(options.newValue),
+        disabled: !!editingReview,
     };
 
     const onSuggestionsFetchRequested = () => {
@@ -95,16 +114,19 @@ const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
     }, [findGameResult.data, searchKeyword]);
 
     useEffect(() => {
-        const result = addReviewResult.data?.addReviewToGame || addReviewToNewGameResult.data?.addReviewToNewGame;
+        const result =
+            addReviewResult.data?.addReviewToGame ||
+            addReviewToNewGameResult.data?.addReviewToNewGame ||
+            updateReviewResult.data?.updateReview;
         if (result) {
             onHide();
         }
-    }, [addReviewResult.data, addReviewToNewGameResult.data, onHide]);
+    }, [addReviewResult.data, addReviewToNewGameResult.data, updateReviewResult.data, onHide]);
 
     return (
-        <Modal show={show} onHide={onHide}>
+        <Modal show onHide={onHide}>
             <Modal.Header closeButton>
-                <Modal.Title>Add your review about a game</Modal.Title>
+                <Modal.Title>{editingReview ? "Update review" : "Add your review about a game"}</Modal.Title>
             </Modal.Header>
             <Modal.Body>
                 <Form>
@@ -145,8 +167,8 @@ const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
                 </Form>
             </Modal.Body>
             <Modal.Footer>
-                <Button variant="primary" onClick={onAddReview} disabled={!selectedGame}>
-                    Share your review
+                <Button variant="primary" onClick={onSubmitReview} disabled={!selectedGame}>
+                    {editingReview ? "Update review" : "Share your review"}
                 </Button>
             </Modal.Footer>
         </Modal>
