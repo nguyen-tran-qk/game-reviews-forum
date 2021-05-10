@@ -4,7 +4,7 @@ import Autosuggest from "react-autosuggest";
 import { Button, Modal, Form } from "react-bootstrap";
 import ReactStars from "react-rating-stars-component";
 import { Game, Review } from "../utils/types";
-import "./autosuggest.css";
+import { QUERY_FIND_GAMES_BY_TITLE } from "./HomeFeed";
 
 const MUTATION_ADD_REVIEW = () => gql`
     mutation AddReview($gameId: ID!, $reviewText: String!, $rating: Float!) {
@@ -18,19 +18,6 @@ const MUTATION_ADD_REVIEW_TO_NEW_GAME = () => gql`
     mutation AddReviewToNewGame($gameTitle: String!, $reviewText: String!, $rating: Float!) {
         addReviewToNewGame(gameTitle: $gameTitle, reviewText: $reviewText, rating: $rating) {
             id
-        }
-    }
-`;
-
-const QUERY_FIND_GAMES_BY_TITLE = () => gql`
-    query FindGame($title: String!) {
-        findGameByTitle(title: $title) {
-            id
-            title
-            description
-            genres
-            price
-            studio
         }
     }
 `;
