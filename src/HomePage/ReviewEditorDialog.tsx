@@ -27,6 +27,10 @@ const QUERY_FIND_GAMES_BY_TITLE = () => gql`
         findGameByTitle(title: $title) {
             id
             title
+            description
+            genres
+            price
+            studio
         }
     }
 `;
@@ -141,6 +145,35 @@ const ReviewEditorDialog = (props: ReviewEditorDialogProps) => {
                             inputProps={inputProps}
                             onSuggestionSelected={onSuggestionSelected}
                         />
+                        {!!selectedGame && (
+                            <>
+                                <div>
+                                    <label>
+                                        <u>Description:</u>
+                                    </label>
+                                    <small>&nbsp;{selectedGame?.description || "N/A"}</small>
+                                </div>
+                                <div>
+                                    <label>
+                                        <u>Genres:</u>
+                                    </label>
+                                    <small>&nbsp;{selectedGame?.genres?.length ? selectedGame?.genres.join(", ") : "N/A"}</small>
+                                </div>
+                                <div>
+                                    <label>
+                                        <u>Price:</u>
+                                    </label>
+                                    <small>&nbsp;{selectedGame?.price || "N/A"}</small>
+                                </div>
+                                <div>
+                                    <label>
+                                        <u>Studio:</u>
+                                    </label>
+                                    <small>&nbsp;{selectedGame?.studio || "N/A"}</small>
+                                </div>
+                            </>
+                        )}
+                        <hr />
                     </Form.Group>
                     <Form.Group controlId="addGameDesc">
                         <Form.Label>Your review</Form.Label>

@@ -101,16 +101,18 @@ const HomeFeed = () => {
                                     <Card body className="mb-3" key={review.id}>
                                         <Card.Title className="review-card-header">
                                             <span>{review.gameId.title}</span>
-                                            {review.username === user?.username && (
-                                                <>
-                                                    <Button variant="light" onClick={handleShow(review)}>
-                                                        <i className="material-icons">edit</i>
-                                                    </Button>
-                                                    <Button variant="light" onClick={onDeleteReview(review.id)}>
-                                                        <i className="material-icons">delete</i>
-                                                    </Button>
-                                                </>
-                                            )}
+                                            <span>
+                                                {review.username === user?.username && (
+                                                    <>
+                                                        <Button variant="light" onClick={handleShow(review)} className="mx-3">
+                                                            <i className="material-icons">edit</i>
+                                                        </Button>
+                                                        <Button variant="light" onClick={onDeleteReview(review.id)}>
+                                                            <i className="material-icons">delete</i>
+                                                        </Button>
+                                                    </>
+                                                )}
+                                            </span>
                                         </Card.Title>
                                         <ReactStars
                                             count={5}
@@ -126,14 +128,6 @@ const HomeFeed = () => {
                                             - by <b>{review.username}</b>
                                         </span>
                                         <Card.Text>{review.reviewText}</Card.Text>
-                                        <Row>
-                                            <Col md={6}>
-                                                <Button variant="link">{review.comments?.length || "0"} comments</Button>
-                                            </Col>
-                                            {/* <Col md={6} className="text-right">
-                                                <Button variant="primary">More details</Button>
-                                            </Col> */}
-                                        </Row>
                                     </Card>
                                 );
                             })}
